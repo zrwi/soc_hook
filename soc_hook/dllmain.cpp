@@ -8,7 +8,7 @@ void create_console()
 	freopen_s((FILE**)stdout, "CONOUT$", "w", stdout);
 	freopen_s((FILE**)stderr, "CONOUT$", "w", stderr);
 
-	SetConsoleTitleA("debug");
+	SetConsoleTitleA("spawned console");
 	std::ios_base::sync_with_stdio(false);
 }
 
