@@ -8,6 +8,19 @@
 #define PCH_H
 
 // add headers that you want to pre-compile here
+
+// Windows headers
 #include "framework.h"
+
+// C++ Standard Library
+#include <cstdio>
+#include <iostream>
+#include <optional>
+
+// Project-local libraries
+#include "detours/detours.h"
+
+// Project
+#include "invasive_hooks/invasive_hooks.hpp"
 
 #endif //PCH_H
