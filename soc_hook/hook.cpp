@@ -2,8 +2,6 @@
 
 using address = uintptr_t;
 
-const int console_log_ORD = 173;
-
 void print_last_error(std::ostream& output)
 {
 	// todo: string error message from error code
@@ -54,27 +52,21 @@ void my_console_log(const char* c)
 	original(c);
 }
 
-struct 
-{
-	address p_call;
-	address load_string;
-	address to_lstring;
-	address open_debug;
-} original_lua;
-
 bool init_addresses()
 {
-	const auto get_from_core = [](const int ordinal)
+	const auto get_from_core = [](const std::string& name, const int ordinal)
 	{
-		return get_address_from_ordinal("xrCore.dll", ordinal);
+		const auto address = get_address_from_ordinal("xrCore.dll", ordinal);
+
+		if (address)
+		{
+			std::cout << "found " << name << " at " << std::hex << *address << std::endl;
+		}
+
+		return address;
 	};
-
-	//const auto get_from_lua = [](const int ordinal)
-	//{
-	//	return get_address_from_ordinal("xrLUA.dll", ordinal);
-	//};
-
-	if (const auto address = get_from_core(console_log_ORD))
+	
+	if (const auto address = get_from_core("console_log", 173)) //  01029890 Export 173 ?Log@@YAXPBD@Z void __cdecl Log(char const *)
 	{
 		original_console_log = *address;
 	}
@@ -107,6 +99,8 @@ void hook_and_idle()
 		//{&(PVOID&)original_function_address, &my_function_to_call},
 		{&(PVOID&)original_console_log, &my_console_log},
 	};
+ 
+	my_console_log("- Hook to game console is working!");
 
 	idle(); // blocking
 }

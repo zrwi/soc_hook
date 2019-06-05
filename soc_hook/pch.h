@@ -13,7 +13,6 @@
 #include "framework.h"
 
 // C++ Standard Library
-#include <cstdio>
 #include <iostream>
 #include <optional>
 
