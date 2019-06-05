@@ -13,8 +13,11 @@
 #include "framework.h"
 
 // C++ Standard Library
+#include <fstream>
 #include <iostream>
 #include <optional>
+#include <sstream>
+
 
 // Project-local libraries
 #include "detours/detours.h"
