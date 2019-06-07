@@ -33,10 +33,16 @@ std::optional<ReturnType> get_address_from_ordinal(const LPCSTR module, const in
 		return std::nullopt;
 	}
 
-	return get_address_from_ordinal<ReturnType>(*module_address, ordinal);
-}
+	const auto a = get_address_from_ordinal<ReturnType>(*module_address, ordinal);
 
-std::optional<address> get_address_from_ordinal(LPCSTR module, const int ordinal);
+	if (a)
+	{
+		std::cout << "Found function " << module << '.' << std::dec << ordinal
+				  << " at " << std::hex << address(*a) << std::endl;
+	}
+
+	return a;
+}
 
 std::optional<address> get_absolute_address_from_module(const HMODULE module, const std::string& name, const address offset);
 std::optional<address> get_absolute_address_from_module(const std::string& module, const std::string& name, const address offset);

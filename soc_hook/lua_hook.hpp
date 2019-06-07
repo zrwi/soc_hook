@@ -1,8 +1,9 @@
 #pragma once
 
 #include "pch.h"
-#include "lua-5.1.1/src/lua.h"
-#include "lua-5.1.1/src/lauxlib.h"
+#include "lua/lua.h"
+#include "lua/lauxlib.h"
+#include "lua/lualib.h"
 
 namespace lua
 {
@@ -17,15 +18,20 @@ namespace lua
 
 	namespace original
 	{
-		bool initialize();
-
 		extern decltype(lua_gettop)* gettop;
 		extern decltype(lua_pcall)* pcall;
 		extern decltype(luaL_loadfile)* loadfile;
+		extern decltype(lua_newthread)* newthread;
+		extern decltype(luaopen_jit)* open_jit;
+
+		bool initialize();
 	}
 
 	namespace my
 	{
+		extern std::optional<lua_State*> g_state;
+
 		int gettop(lua_State* state);
+		int open_jit(lua_State* state);
 	}
 }
