@@ -27,6 +27,5 @@ using address = uintptr_t;
 
 // Project
 #include "invasive_hooks/invasive_hooks.hpp"
-#include "utility.hpp"
 
 #endif //PCH_H

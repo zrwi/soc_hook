@@ -1,5 +1,5 @@
 #include "pch.h"
-
+#include "utility.hpp"
 
 address original_console_log = 0;
 void my_console_log(const char* c)

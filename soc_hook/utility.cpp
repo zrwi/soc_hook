@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "utility.hpp"
 
 void print_last_error(std::ostream& output)
 {

@@ -33,5 +33,4 @@ std::optional<ReturnType> get_address_from_ordinal(LPCSTR module, const int ordi
 std::optional<address> get_address_from_ordinal(LPCSTR module, const int ordinal);
 std::optional<address> get_absolute_address_from_module(const HMODULE module, const std::string& name, const address offset);
 std::optional<address> get_absolute_address_from_core(const std::string& name, const address offset);
-
 std::optional<address> get_absolute_address_from_game(const std::string& name, const address offset);
