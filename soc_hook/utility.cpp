@@ -28,7 +28,14 @@ std::optional<HMODULE> get_module(LPCSTR module)
 
 std::optional<address> get_address_from_ordinal(LPCSTR module, const int ordinal)
 {
-	return get_address_from_ordinal<address>(module, ordinal);
+	if (const auto addr = get_address_from_ordinal<address>(module, ordinal))
+	{
+		std::cout << "Found function " << module << '.' << ordinal
+				  << " at " << std::hex << *addr << std::endl;
+		return *addr;
+	}
+
+	return std::nullopt;
 }
 
 std::optional<address> get_absolute_address_from_module(const HMODULE module, const std::string& name, const address offset)
@@ -36,6 +43,16 @@ std::optional<address> get_absolute_address_from_module(const HMODULE module, co
 	const auto a = address(module) + offset;
 	std::cout << name << " is at " << std::hex << a << '\n';
 	return a;
+}
+
+std::optional<address> get_absolute_address_from_module(const std::string& module, const std::string& name, const address offset)
+{
+	if (const auto m = get_module(module.c_str()))
+	{
+		return get_absolute_address_from_module(m.value(), name, offset);
+	}
+
+	return std::nullopt;
 }
 
 std::optional<address> get_absolute_address_from_core(const std::string& name, const address offset)

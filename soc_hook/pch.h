@@ -13,6 +13,7 @@
 #include "framework.h"
 
 // C++ Standard Library
+#include <cassert>
 #include <fstream>
 #include <iostream>
 #include <optional>

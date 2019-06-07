@@ -87,12 +87,52 @@ void __cdecl my_load_object(const address unknown_class_instance, game_object* c
 	original(unknown_class_instance, object);
 }
 
+address original_lua_gettop = 0;
+/*
+Address=00F68280
+Type=Export
+Ordinal=354
+Symbol=lua_gettop
+
+struct s0 {
+    int8_t[12] pad12;
+    int32_t f12;
+    int32_t f16;
+};
+
+int32_t lua_gettop(struct s0* a1) {
+    return a1->f12 - a1->f16 >> 4;
+}
+
+*/
+
+struct lua_state
+{
+    int8_t pad12[12];
+    int32_t f12;
+    int32_t f16;
+};
+
+std::optional<lua_state*> g_lua_state;
+
+int32_t my_lua_gettop(lua_state* state)
+{
+	assert(state != nullptr);
+
+	if (!g_lua_state)
+	{
+		g_lua_state = state;
+		std::cout << "g_lua_state = " << std::hex << state << std::endl;
+	}
+
+	return state->f12 - state->f16 >> 4;
+}
+
 bool init_addresses()
 {
 	if (const auto address = get_address_from_ordinal("xrCore.dll", 173)) //  01029890 Export 173 ?Log@@YAXPBD@Z void __cdecl Log(char const *)
 	{
 		original_console_log = *address;
-		std::cout << "found Log at " << std::hex << original_console_log << std::endl;
 	}
 	else
 	{
@@ -111,6 +151,15 @@ bool init_addresses()
 	if (const auto addr = get_absolute_address_from_game("load_object", 0x60b9c))
 	{
 		original_load_object = *addr;
+	}
+	else
+	{
+		return false;
+	}
+
+	if (const auto addr = get_address_from_ordinal("xrlua.dll", 354))
+	{
+		original_lua_gettop = addr.value();
 	}
 	else
 	{
@@ -148,7 +197,11 @@ void hook_and_idle()
 		//{&(PVOID&)original_function_address, &my_function_to_call},
 		{&(PVOID&)original_console_log, &my_console_log},
 		{&(PVOID&)original_rtc_decompress, &my_rtc_decompress},
-		{&(PVOID&)original_load_object, &my_load_object},
+
+		// crashes; need to adjust manually adjust stack in hooked function.
+		//{&(PVOID&)original_load_object, &my_load_object},
+
+		{&(PVOID&)original_lua_gettop, my_lua_gettop},
 	};
  
 	my_console_log("- Hook to game console is working!");
