@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "utility.hpp"
+#include "lua_hook.hpp"
 
 address original_console_log = 0;
 void my_console_log(const char* c)
@@ -10,21 +11,19 @@ void my_console_log(const char* c)
 	original(c);
 }
 
-/*
- * Address=050CEC24
-Type=Import
-Symbol=?rtc_decompress@@YAIPAXIPBXI@Z
-Symbol (undecorated)=unsigned int __cdecl rtc_decompress(void *,unsigned int,void const *,unsigned int)
- */
-
 void dump_decompressed_save_file(void* const buffer, const std::size_t length)
 {
-	std::ostringstream file_name;
+	std::ostringstream file_name_oss;
 	//G:\S.T.A.L.K.E.R. - Shadow of Chernobyl\bin\17250030_403f31.decompressed_save_file
-	file_name << std::hex << buffer << '_' << length << ".decompressed_save_file";
+	file_name_oss << std::hex << buffer << '_' << length << ".decompressed_save_file";
 
-	std::ofstream file{file_name.str(), std::ios_base::out | std::ios_base::binary};
+	const auto file_name = file_name_oss.str();
+	
+	std::ofstream file{file_name, std::ios_base::out | std::ios_base::binary};
+	
 	file.write((char*)buffer, length);
+	
+	std::cout << "saved " << file_name << '\n';
 }
 
 address original_rtc_decompress = 0;
@@ -87,50 +86,9 @@ void __cdecl my_load_object(const address unknown_class_instance, game_object* c
 	original(unknown_class_instance, object);
 }
 
-address original_lua_gettop = 0;
-/*
-Address=00F68280
-Type=Export
-Ordinal=354
-Symbol=lua_gettop
-
-struct s0 {
-    int8_t[12] pad12;
-    int32_t f12;
-    int32_t f16;
-};
-
-int32_t lua_gettop(struct s0* a1) {
-    return a1->f12 - a1->f16 >> 4;
-}
-
-*/
-
-struct lua_state
-{
-    int8_t pad12[12];
-    int32_t f12;
-    int32_t f16;
-};
-
-std::optional<lua_state*> g_lua_state;
-
-int32_t my_lua_gettop(lua_state* state)
-{
-	assert(state != nullptr);
-
-	if (!g_lua_state)
-	{
-		g_lua_state = state;
-		std::cout << "g_lua_state = " << std::hex << state << std::endl;
-	}
-
-	return state->f12 - state->f16 >> 4;
-}
-
 bool init_addresses()
 {
-	if (const auto address = get_address_from_ordinal("xrCore.dll", 173)) //  01029890 Export 173 ?Log@@YAXPBD@Z void __cdecl Log(char const *)
+	if (const auto address = get_address_from_ordinal("xrcore.dll", 173))
 	{
 		original_console_log = *address;
 	}
@@ -157,11 +115,7 @@ bool init_addresses()
 		return false;
 	}
 
-	if (const auto addr = get_address_from_ordinal("xrlua.dll", 354))
-	{
-		original_lua_gettop = addr.value();
-	}
-	else
+	if (!lua::original::initialize())
 	{
 		return false;
 	}
@@ -198,10 +152,10 @@ void hook_and_idle()
 		{&(PVOID&)original_console_log, &my_console_log},
 		{&(PVOID&)original_rtc_decompress, &my_rtc_decompress},
 
-		// crashes; need to adjust manually adjust stack in hooked function.
+		// crashes; need to manually adjust stack in hooked function.
 		//{&(PVOID&)original_load_object, &my_load_object},
 
-		{&(PVOID&)original_lua_gettop, my_lua_gettop},
+		{&(PVOID&)lua::original::gettop, lua::my::gettop},
 	};
  
 	my_console_log("- Hook to game console is working!");

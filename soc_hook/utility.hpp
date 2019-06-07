@@ -8,17 +8,10 @@ void print_last_error();
 std::optional<HMODULE> get_module(LPCSTR module);
 
 template <typename ReturnType>
-std::optional<ReturnType> get_address_from_ordinal(LPCSTR module, const int ordinal)
+std::optional<ReturnType> get_address_from_ordinal(const HMODULE module, const int ordinal)
 {
-	const auto module_address = get_module(module);
-
-	if (!module_address)
-	{
-		return std::nullopt;
-	}
-
 	const auto ordinal_int_resource = MAKEINTRESOURCEA(ordinal);
-	const auto address = GetProcAddress(*module_address, ordinal_int_resource);
+	const auto address = GetProcAddress(module, ordinal_int_resource);
 
 	if (!address)
 	{
@@ -28,6 +21,19 @@ std::optional<ReturnType> get_address_from_ordinal(LPCSTR module, const int ordi
 	}
 
 	return ReturnType(address);
+}
+
+template <typename ReturnType>
+std::optional<ReturnType> get_address_from_ordinal(const LPCSTR module, const int ordinal)
+{
+	const auto module_address = get_module(module);
+
+	if (!module_address)
+	{
+		return std::nullopt;
+	}
+
+	return get_address_from_ordinal<ReturnType>(*module_address, ordinal);
 }
 
 std::optional<address> get_address_from_ordinal(LPCSTR module, const int ordinal);
