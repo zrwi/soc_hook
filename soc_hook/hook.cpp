@@ -1,59 +1,5 @@
 #include "pch.h"
 
-using address = uintptr_t;
-
-void print_last_error(std::ostream& output)
-{
-	// todo: string error message from error code
-	output << "Error code is " << GetLastError() << std::endl;
-}
-
-void print_last_error()
-{
-	print_last_error(std::cerr);
-}
-
-std::optional<HMODULE> get_module(LPCSTR module)
-{
-	const auto module_address = GetModuleHandleA(module);
-	
-	if (module_address)
-	{
-		return module_address;
-	}
-
-	std::cerr << "Failed to get module address of " << module << ".\n";
-	print_last_error();
-	return std::nullopt;
-}
-
-template <typename ReturnType>
-std::optional<ReturnType> get_address_from_ordinal(LPCSTR module, const int ordinal)
-{
-	const auto module_address = get_module(module);
-
-	if (!module_address)
-	{
-		return std::nullopt;
-	}
-
-	const auto ordinal_int_resource = MAKEINTRESOURCEA(ordinal);
-	const auto address = GetProcAddress(*module_address, ordinal_int_resource);
-
-	if (!address)
-	{
-		std::cerr << "Failed to get address of function with ordinal " << ordinal << " in module " << module << ".\n";
-		print_last_error();
-		return std::nullopt;	
-	}
-
-	return ReturnType(address);
-}
-
-std::optional<address> get_address_from_ordinal(LPCSTR module, const int ordinal)
-{
-	return get_address_from_ordinal<address>(module, ordinal);
-}
 
 address original_console_log = 0;
 void my_console_log(const char* c)
@@ -99,37 +45,75 @@ unsigned int my_rtc_decompress(void* pointer_to_buffer_to_hold_decompressed_save
 	return ret;
 }
 
-auto get_from_core(const std::string& name, const int ordinal)
+template <typename DataType>
+struct vec3
 {
-	const auto address = get_address_from_ordinal("xrCore.dll", ordinal);
+	DataType x;
+	DataType y;
+	DataType z;
+};
 
-	if (address)
-	{
-		std::cout << "found " << name << " at " << std::hex << *address << std::endl;
-	}
+class game_string
+{
+public:
+	char pad_0000[4]; //0x0000
+	uint32_t length; //0x0004
+	char pad_0008[4]; //0x0008
+	char raw_string[1]; //0x000C
+}; //Size: 0x001C
 
-	return address;
+class game_object
+{
+public:
+	char pad_0000[54]; //0x0000
+	uint16_t id; //0x0036
+	char pad_0038[8]; //0x0038
+	game_string *name; //0x0040
+	char pad_0044[20]; //0x0044
+	vec3<float> position; //0x0058
+	vec3<float> rotation; //0x0064
+	char pad_0070[20]; //0x0070
+}; //Size: 0x0084
+
+
+address original_load_object = 0;
+void __cdecl my_load_object(const address unknown_class_instance, game_object* const object)
+{
+	std::cout << std::hex << object << std::endl;
+
+	//std::cout << object->id << " " << object->name->raw_string << '\n';
+
+	const auto original = decltype(&my_load_object)(original_load_object);
+	original(unknown_class_instance, object);
 }
 
 bool init_addresses()
 {
-	if (const auto address = get_from_core("console_log", 173)) //  01029890 Export 173 ?Log@@YAXPBD@Z void __cdecl Log(char const *)
+	if (const auto address = get_address_from_ordinal("xrCore.dll", 173)) //  01029890 Export 173 ?Log@@YAXPBD@Z void __cdecl Log(char const *)
 	{
 		original_console_log = *address;
+		std::cout << "found Log at " << std::hex << original_console_log << std::endl;
 	}
 	else
 	{
 		return false;
 	}
 
-	if (const auto xrcore_dll = get_module("xrCore.dll"))
+	if (const auto addr = get_absolute_address_from_core("rtc_decompress", 0x126f0))
 	{
-		original_rtc_decompress = address(*xrcore_dll) + 0x126f0;
-		std::cout << "found rtc_decompress at " << std::hex << original_rtc_decompress << '\n';
+		original_rtc_decompress = *addr;
 	}
 	else
 	{
-		std::cerr << "unable to find rtc_decomrpess\n";
+		return false;
+	}
+
+	if (const auto addr = get_absolute_address_from_game("load_object", 0x60b9c))
+	{
+		original_load_object = *addr;
+	}
+	else
+	{
 		return false;
 	}
 
@@ -145,10 +129,17 @@ void idle()
 	}
 }
 
+void wait_for_user_input()
+{
+	char sentinel;
+	std::cin >> sentinel;
+}
+
 void hook_and_idle()
 {
 	if (!init_addresses())
 	{
+		wait_for_user_input();
 		return;
 	}
 
@@ -157,6 +148,7 @@ void hook_and_idle()
 		//{&(PVOID&)original_function_address, &my_function_to_call},
 		{&(PVOID&)original_console_log, &my_console_log},
 		{&(PVOID&)original_rtc_decompress, &my_rtc_decompress},
+		{&(PVOID&)original_load_object, &my_load_object},
 	};
  
 	my_console_log("- Hook to game console is working!");
