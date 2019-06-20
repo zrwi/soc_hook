@@ -38,7 +38,7 @@ std::optional<ReturnType> get_address_from_ordinal(const LPCSTR module, const in
 	if (a)
 	{
 		std::cout << "Found function " << module << '.' << std::dec << ordinal
-				  << " at " << std::hex << address(*a) << std::endl;
+				  << " at 0x" << std::hex << address(*a) << std::endl;
 	}
 
 	return a;

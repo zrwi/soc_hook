@@ -6,11 +6,7 @@ namespace lua
 {
 	namespace original
 	{
-		decltype(lua_gettop)* gettop;
-		decltype(lua_pcall)* pcall;
-		decltype(luaL_loadfile)* loadfile;
-		decltype(lua_newthread)* newthread;
-		decltype(luaopen_jit)* open_jit;
+		decltype(luabind::detail::pcall)* pcall;
 
 		template <typename ReturnType>
 		std::optional<ReturnType> get_address_from_ordinal(const int ordinal)
@@ -20,51 +16,14 @@ namespace lua
 
 		bool initialize()
 		{
-			if (const auto addr = get_address_from_ordinal<decltype(gettop)>(354))
+			if (const auto address = get_address_from_ordinal<decltype(pcall)>(243))
 			{
-				gettop = *addr;
+				pcall = *address;
 			}
 			else
 			{
 				return false;
 			}
-
-			if (const auto addr = get_address_from_ordinal<decltype(pcall)>(369))
-			{
-				pcall = *addr;
-			}
-			else
-			{
-				return false;
-			}
-
-			if (const auto addr = get_address_from_ordinal<decltype(loadfile)>(313))
-			{
-				loadfile = *addr;
-			}
-			else
-			{
-				return false;
-			}
-
-			if (const auto addr = get_address_from_ordinal<decltype(newthread)>(365))
-			{
-				newthread = *addr;
-			}
-			else
-			{
-				return false;
-			}
-
-			if (const auto addr = get_address_from_ordinal<decltype(open_jit)>(417))
-			{
-				open_jit = *addr;
-			}
-			else
-			{
-				return false;
-			}
-
 
 			return true;
 		}
