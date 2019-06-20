@@ -44,48 +44,6 @@ unsigned int my_rtc_decompress(void* pointer_to_buffer_to_hold_decompressed_save
 	return ret;
 }
 
-template <typename DataType>
-struct vec3
-{
-	DataType x;
-	DataType y;
-	DataType z;
-};
-
-class game_string
-{
-public:
-	char pad_0000[4]; //0x0000
-	uint32_t length; //0x0004
-	char pad_0008[4]; //0x0008
-	char raw_string[1]; //0x000C
-}; //Size: 0x001C
-
-class game_object
-{
-public:
-	char pad_0000[54]; //0x0000
-	uint16_t id; //0x0036
-	char pad_0038[8]; //0x0038
-	game_string *name; //0x0040
-	char pad_0044[20]; //0x0044
-	vec3<float> position; //0x0058
-	vec3<float> rotation; //0x0064
-	char pad_0070[20]; //0x0070
-}; //Size: 0x0084
-
-
-address original_load_object = 0;
-void __cdecl my_load_object(const address unknown_class_instance, game_object* const object)
-{
-	std::cout << std::hex << object << std::endl;
-
-	//std::cout << object->id << " " << object->name->raw_string << '\n';
-
-	const auto original = decltype(&my_load_object)(original_load_object);
-	original(unknown_class_instance, object);
-}
-
 bool init_addresses()
 {
 	if (const auto addr = get_address_from_ordinal<address>("xrcore.dll", 173))
@@ -100,15 +58,6 @@ bool init_addresses()
 	if (const auto addr = get_absolute_address_from_core("rtc_decompress", 0x126f0))
 	{
 		original_rtc_decompress = *addr;
-	}
-	else
-	{
-		return false;
-	}
-
-	if (const auto addr = get_absolute_address_from_game("load_object", 0x60b9c))
-	{
-		original_load_object = *addr;
 	}
 	else
 	{
@@ -170,9 +119,6 @@ void hook_and_idle()
 		//{&(PVOID&)original_function_address, &my_function_to_call},
 		{&(PVOID&)original_console_log, &my_console_log},
 		//{&(PVOID&)original_rtc_decompress, &my_rtc_decompress},
-
-		// crashes; need to manually adjust stack in hooked function.
-		//{&(PVOID&)original_load_object, &my_load_object},
 
 		{&(PVOID&)lua::original::gettop, lua::my::gettop},
 		{&(PVOID&)lua::original::open_jit, lua::my::open_jit},
