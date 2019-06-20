@@ -7,15 +7,6 @@
 
 namespace lua
 {
-	//struct state
-	//{
-	//	static std::optional<state*> instance;
-
-	//	int8_t pad12[12];
-	//	int32_t f12;
-	//	int32_t f16;
-	//};
-
 	namespace original
 	{
 		extern decltype(lua_gettop)* gettop;
@@ -29,9 +20,5 @@ namespace lua
 
 	namespace my
 	{
-		extern std::optional<lua_State*> g_state;
-
-		int gettop(lua_State* state);
-		int open_jit(lua_State* state);
 	}
 }

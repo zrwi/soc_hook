@@ -72,41 +72,6 @@ namespace lua
 
 	namespace my
 	{
-		std::optional<lua_State*> g_state;
 
-		int32_t gettop(lua_State* state)
-		{
-			assert(state != nullptr);
-
-			if (!g_state)
-			{
-				g_state = state;
-				std::cout << "g_state = " << std::hex << state << '\n';
-			}
-
-			return original::gettop(state);
-		}
-
-		int open_jit(lua_State* state)
-		{
-			std::cout << "my::open_jit\n";
-
-			const auto ret = original::open_jit(state);
-			
-			std::cout << "got past original::open_jit\n";
-			const auto my_state = lua::original::newthread(state);
-
-			std::cout << "got my_state = " << std::hex << my_state << '\n';
-
-			if (my_state && !lua::original::loadfile(my_state, "some_test_lua.script"))
-			{
-				std::cout << "got past loadfile\n";
-				lua::original::pcall(my_state, 0, -1, 0);
-				std::cout << "got past pcall\n";
-			}
-
-			//original::loadfile(state, "some_test_lua.script") || original::pcall(state, 0, -1, 0);
-			return ret;
-		}
 	}
 }

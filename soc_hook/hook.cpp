@@ -78,24 +78,6 @@ void idle()
 
 	while (!GetAsyncKeyState(VK_END))
 	{
-		if (GetAsyncKeyState(VK_INSERT) & 1)
-		{
-			if (const auto state = lua::my::g_state)
-			{
-				std::cout << "got past state\n";
-				const auto my_state = lua::original::newthread(*state);
-
-				std::cout << "got my_state = " << std::hex << my_state << '\n';
-
-				if (my_state && !lua::original::loadfile(my_state, "some_test_lua.script"))
-				{
-					std::cout << "got past loadfile\n";
-					lua::original::pcall(my_state, 0, -1, 0);
-					std::cout << "got past pcall\n";
-				}
-			}
-		}
-
 		Sleep(1024);
 	}
 }
@@ -119,9 +101,6 @@ void hook_and_idle()
 		//{&(PVOID&)original_function_address, &my_function_to_call},
 		{&(PVOID&)original_console_log, &my_console_log},
 		//{&(PVOID&)original_rtc_decompress, &my_rtc_decompress},
-
-		{&(PVOID&)lua::original::gettop, lua::my::gettop},
-		{&(PVOID&)lua::original::open_jit, lua::my::open_jit},
 	};
  
 	my_console_log("- Hook to game console is working!");
