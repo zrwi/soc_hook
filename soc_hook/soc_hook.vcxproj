@@ -165,6 +165,7 @@
   <ItemGroup>
     <ClInclude Include="framework.h" />
     <ClInclude Include="hook.hpp" />
+    <ClInclude Include="luabind_hook.hpp" />
     <ClInclude Include="lua_hook.hpp" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="utility.hpp" />
@@ -173,6 +174,7 @@
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="hook.cpp" />
     <ClCompile Include="invasive_hooks\invasive_hooks.cpp" />
+    <ClCompile Include="luabind_hook.cpp" />
     <ClCompile Include="lua_hook.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

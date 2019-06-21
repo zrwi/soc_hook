@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "utility.hpp"
+
 #include "lua_hook.hpp"
+#include "luabind_hook.hpp"
 
 address original_console_log = 0;
 void my_console_log(const char* c)
@@ -69,7 +71,47 @@ bool init_addresses()
 		return false;
 	}
 
+	if (!luabind::original::initialize())
+	{
+		return false;
+	}
+
 	return true;
+}
+
+
+void hack()
+{
+	using namespace luabind;
+	using namespace luabind::original;
+	using namespace lua::original;
+
+	if (!my::state)
+	{
+		my::initialize_new_state();
+		return;
+	}
+
+	const auto state = *my::state;
+
+	if (const auto s = status(state))
+	{
+		std::cout << "hack(): lua::original::status(*my::state) == " << s << '\n';
+		return;
+	}
+
+	pushstring(state, "hack_numpad_press(\"NUM0\");");
+	pcall(state, 0, 0);
+
+	/*
+		char buffer[48];
+		memset(buffer, NULL, 48);
+
+		sprintf_s(buffer, "hack_numpad_press(\"%s\");", key_str[i - 0x60]);
+
+		o_lua_pushstring(hack_lua, buffer);
+		o_luabind_pcall(hack_lua, 0, 0);
+	*/
 }
 
 void idle()
@@ -78,7 +120,12 @@ void idle()
 
 	while (!GetAsyncKeyState(VK_END))
 	{
-		Sleep(1024);
+		if ( (GetAsyncKeyState(VK_INSERT) & 1))
+		{
+			hack();
+		}
+
+		Sleep(256);
 	}
 }
 
@@ -101,6 +148,7 @@ void hook_and_idle()
 		//{&(PVOID&)original_function_address, &my_function_to_call},
 		{&(PVOID&)original_console_log, &my_console_log},
 		//{&(PVOID&)original_rtc_decompress, &my_rtc_decompress},
+		{&(PVOID&)luabind::original::pcall, &luabind::my::pcall},
 	};
  
 	my_console_log("- Hook to game console is working!");
